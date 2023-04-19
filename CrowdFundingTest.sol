@@ -33,7 +33,6 @@ contract Crowdfunding {
         campaign.deadline = (_deadline * minute) + block.timestamp;
         campaign.amountCollected = 0;
         campaign.image = _image;
-        campaign.expectedInterestRate = _expectedInterestRate;
 
         numberOfCampaigns++;
 
