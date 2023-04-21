@@ -98,38 +98,16 @@ contract Crowdfunding {
         address ownerAdd = campaign.owner;
         uint withdrawMoney = campaign.amountCollected * 15/100;
 
-        // if(currentStage == 0) {
-        //     //require(msg.sender = campaign.owner, "Only the owner of the campaign can withdraw funds");
-        //     //require(address(this).balance > withdrawMoney, "Don't have enpugh money on this contract");
-        //     //require(campaign.amountCollected >= withdrawMoney, "The money in this project is not enough");
+        //require(msg.sender == campaign.owner, "Only the owener of the campaign can withdraw funds");
+        require(address(this).balance > withdrawMoney, "Don't have enpugh money on this contract");
+        require(campaign.amountCollected >= withdrawMoney, "The money in this project is not enough");
 
-        //     (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
+        if(currentStage == 0) {
+             (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
+             campaign.amountCollected -= withdrawMoney;
+             }
 
-        //     campaign.amountCollected -= withdrawMoney;
-        // }
-
-        // require(msg.sender == campaign.owner, "Only the owner of the campaign can withdraw funds.");
-        // //require(campaign.amountCollected >= _amountWei, "Cannot withdraw more than the amount collected.");
-        // require(address(this).balance > _amountWei, "Don't have enough fund in the contract address");
-
-        // (bool sent, ) = payable(ownerAdd).call{value: _amountWei}("");
-
-        // require(sent, "Failed to send Ether.");
-
-        // campaign.amountCollected -= _amountWei;
      }
-
-    // function withdrawFunds(uint256 _id) public payable{
-    //     Campaign storage campaign = campaigns[_id];
-
-    //     address ownerAddress = campaign.owner;
-    //     address donator = campaign.donators[0];
-    //     uint money = campaign.donations[donator] * 15/100;
-    //     (bool sent, ) = payable(ownerAddress).call{value: money}("");
-
-    //     require(sent, "Failed to send Ether");
-
-    // }
 
     function releaseFunds(uint256 _id) public payable {
         Campaign storage campaign = campaigns[_id];
