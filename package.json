@@ -1,0 +1,27 @@
+{
+  "name": "fintechgroup9-1",
+  "version": "1.0.0",
+  "description": "crowdfunding",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx thirdweb@latest detect",
+    "deploy": "npx thirdweb@latest deploy",
+    "release": "npx thirdweb@latest release"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChawinT/FintechGroup9.git"
+  },
+  "keywords": [
+    "[]"
+  ],
+  "author": "wasin_siripanupongchai",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ChawinT/FintechGroup9/issues"
+  },
+  "homepage": "https://github.com/ChawinT/FintechGroup9#readme",
+  "devDependencies": {
+    "hardhat": "^2.14.0"
+  }
+}

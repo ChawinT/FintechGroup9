@@ -1,0 +1,40 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/Users/wasinyok/Desktop/CrowdFunding/FintechGroup9-1/contracts/CrowdFundingTest.sol": {
+      "lastModificationDate": 1681938478196,
+      "contentHash": "f3907f3779d09d0b4343096e84dffd0b",
+      "sourceName": "contracts/CrowdFundingTest.sol",
+      "solcConfig": {
+        "version": "0.8.18",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.9"
+      ],
+      "artifacts": [
+        "Crowdfunding"
+      ]
+    }
+  }
+}
