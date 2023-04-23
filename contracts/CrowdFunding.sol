@@ -4,32 +4,33 @@ pragma solidity ^0.8.9;
 
 contract Crowdfunding {
     struct Campaign {
-        address owner;
-        string title;
-        string description;
-        uint256 target;
-        uint256 deadline;
-        uint256 amountCollected;
-        uint256 amountleft;
-        address[] donators;
-        mapping(address => uint256) donations;
-        uint256 expectedInterestRate;
-        mapping(uint => Voting) votes;
-        uint256 status;
-        uint256 current_stage;
+        address owner; // An address of the owner of the project 
+        string title; // A title of the project 
+        string description; // A description of the project 
+        uint256 target; // A target for fund raising 
+        uint256 deadline; // A deadline for raising fund 
+        uint256 amountCollected; // An amount of fund that has been raised
+        uint256 amountleft; // An amount of fund left after withdraw to the project owener 
+        address[] donators; // An address of donator 
+        mapping(address => uint256) donations; // A mapping of an address to an amount of donation 
+        uint256 expectedInterestRate; // An expected interest rate of a project
+        mapping(uint => Voting) votes; // 
+        uint256 status; // A status of a project 
+        uint256 current_stage; // A stage of the project
     }
     
-
     struct Voting {
-        uint256 stage;
-        uint256 count;
-        mapping(address => bool) voterAddrs;
+        uint256 stage; // A stage of voting
+        uint256 count; // A number of voting
+        mapping(address => bool) voterAddrs; // A map that link address to the vote
     }
 
-    mapping(uint256 => Campaign) public campaigns;
+    mapping(uint256 => Campaign) public campaigns; // A mapping that link the project id to campaign
 
-    uint256 public numberOfCampaigns = 0;
+    uint256 public numberOfCampaigns = 0; // A number of campaign
 
+    // A function that use to create a campaign //
+    // It needs 5 inputs which are 1.Title of the project 2.Description of the project 3.Targeted amount 4.Deadline for fundraising 5.Expected Interest Rate
     function createCampaign(
         string memory _title,
         string memory _description,
@@ -39,6 +40,7 @@ contract Crowdfunding {
     ) public returns (uint256) {
 
         uint256 minute = 1 minutes;
+        // uint256 day = 1 days;
 
         Campaign storage campaign = campaigns[numberOfCampaigns];
 
