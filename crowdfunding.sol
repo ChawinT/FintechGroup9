@@ -12,7 +12,7 @@ contract Crowdfunding {
         uint256 amountCollected;
         // record the duration of each stage
         uint256[] timer;
-        //uint256 amountleft;
+        uint256 amountleft;
         // to change
         // uint256[] donations;
         address[] donators;
@@ -96,24 +96,68 @@ contract Crowdfunding {
 
     function withdrawFunds(uint256 _id, uint256 _stage) public payable {
 
-        // uint256 currentStage = _stage;
+        uint256 currentStage = _stage;
 
         Campaign storage campaign = campaigns[_id];
 
-        //uint _amountWei = _amount * 1 ether;
         address ownerAdd = campaign.owner;
-        uint withdrawMoney = campaign.amountCollected * 15/100;
+        uint projectFund = campaign.target;
+        uint withdrawMoney;
 
         //require(msg.sender == campaign.owner, "Only the owener of the campaign can withdraw funds");
-        require(address(this).balance > withdrawMoney, "Don't have enpugh money on this contract");
-        require(campaign.amountCollected >= withdrawMoney, "The money in this project is not enough"); 
+        require(address(this).balance >= campaign.amountleft, "Don't have enough money on this contract");
 
-        if(_stage <= 3) {
-             (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
-             campaign.amountCollected -= withdrawMoney;
-        }
+        if(currentStage == 0) {
+            withdrawMoney = projectFund * 15/100;
+            require(campaign.amountleft >= withdrawMoney, "The money in this project is not enough");
+            (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
+            campaign.amountleft -= withdrawMoney;
+        } else
+        if(currentStage == 1) {
+            withdrawMoney = projectFund * 40/100;
+            require(campaign.amountleft >= withdrawMoney, "The money in this project is not enough");
+            (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
+            campaign.amountleft -= withdrawMoney;
+        } else
+        if(currentStage == 2) {
+            withdrawMoney = projectFund * 35/100;
+            require(campaign.amountleft >= withdrawMoney, "The money in this project is not enough");
+            (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
+            campaign.amountleft -= withdrawMoney;
+        } else
+        if(currentStage == 3) {
+            withdrawMoney = projectFund * 10/100;
+            require(campaign.amountleft >= withdrawMoney, "The money in this project is not enough");
+            (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
+            campaign.amountleft -= withdrawMoney;
+        } 
+        // else
+        // if(currentStage == 4) {
+        //     require(campaign.amountleft == 0, "Something Wrong");
+        // }
 
      }
+
+    // function withdrawFunds(uint256 _id, uint256 _stage) public payable {
+
+    //     // uint256 currentStage = _stage;
+
+    //     Campaign storage campaign = campaigns[_id];
+
+    //     //uint _amountWei = _amount * 1 ether;
+    //     address ownerAdd = campaign.owner;
+    //     uint withdrawMoney = campaign.amountCollected * 15/100;
+
+    //     //require(msg.sender == campaign.owner, "Only the owener of the campaign can withdraw funds");
+    //     require(address(this).balance > withdrawMoney, "Don't have enpugh money on this contract");
+    //     require(campaign.amountCollected >= withdrawMoney, "The money in this project is not enough"); 
+
+    //     if(_stage <= 3) {
+    //          (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
+    //          campaign.amountCollected -= withdrawMoney;
+    //     }
+
+    //  }
 
     function releaseFunds(uint256 _id, uint256 _stage) public payable {
         // uint256 currentStage = _stage;
