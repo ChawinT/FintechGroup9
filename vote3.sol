@@ -5,7 +5,7 @@ import "./crowdfunding.sol";
 contract Vote is Crowdfunding {
     function isFundsEnough(uint256 id)public view returns (bool){
         // check time before the deadline
-        // require(block.timestamp <= campaigns[id].deadline,"Over the deadline");
+        require(block.timestamp >= block.timestamp + campaigns[id].deadline,"not reach the money raising deadline");
         return campaigns[id].target <= campaigns[id].amountCollected;
     }
 // project status
@@ -13,6 +13,7 @@ contract Vote is Crowdfunding {
 // 1-raising money   2-fail(because funds not enough)
 // 3-enough money and voting     4-fail(vote to end)
 // 5-finish and give money back with interest
+
     function moveNextStage(uint256 project_id) public {
 
         uint256 stage = campaigns[project_id].current_stage;
@@ -22,7 +23,7 @@ contract Vote is Crowdfunding {
                 // start the project
                 campaigns[project_id].status = 3;
                 // withdraw first stage amount of funds
-                withdrawFunds(project_id, stage);
+                withdrawFunds(project_id, stage);       //
                 // start voting
                 campaigns[project_id].start_timestamp = block.timestamp;
             }else{
@@ -33,8 +34,8 @@ contract Vote is Crowdfunding {
             }
             
         }else if((stage < 3)&& (campaigns[project_id].status==3)){  // stage 0,1,2 voting
-            uint time = campaigns[project_id].start_timestamp;
-            for (uint i = stage;i>=0;i--){
+            uint256 time = campaigns[project_id].start_timestamp;
+            for (uint256 i = stage;i>=0;i--){
                 time += campaigns[project_id].timer[i]* 1 minutes;     //TODO: change minutes to days
             }
             require(block.timestamp > time,"voting has not reached the deadline");
@@ -56,7 +57,9 @@ contract Vote is Crowdfunding {
     }
 
 
-    function stage_vote(uint256 project_id, uint256 stage) public {
+    function stage_vote(uint256 project_id) public {
+        uint256 stage = campaigns[project_id].current_stage;
+
         require(!campaigns[project_id].votes[stage].voterAddrs[msg.sender], "Address has already voted.");
         //check donators address
         require(isDonator(project_id, msg.sender), "The sender is not a donator.");
@@ -85,7 +88,7 @@ contract Vote is Crowdfunding {
         // require donators to view the voting results
         // require(isDonator(project_id, msg.sender), "The sender is not a donator.");
         // require(msg.sender == campaigns[project_id].owner, "Only the owner of the campaign can public the project.");
-        bool vote_result = (campaigns[project_id].votes[stage].count > campaigns[project_id].amountCollected / 2);
+        bool vote_result = (campaigns[project_id].votes[stage].count > campaigns[project_id].target / 2);
         return vote_result;
     }
 
