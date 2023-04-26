@@ -138,70 +138,37 @@ contract Crowdfunding {
 
      }
 
-    // function withdrawFunds(uint256 _id, uint256 _stage) public payable {
-
-    //     // uint256 currentStage = _stage;
-
-    //     Campaign storage campaign = campaigns[_id];
-
-    //     //uint _amountWei = _amount * 1 ether;
-    //     address ownerAdd = campaign.owner;
-    //     uint withdrawMoney = campaign.amountCollected * 15/100;
-
-    //     //require(msg.sender == campaign.owner, "Only the owener of the campaign can withdraw funds");
-    //     require(address(this).balance > withdrawMoney, "Don't have enpugh money on this contract");
-    //     require(campaign.amountCollected >= withdrawMoney, "The money in this project is not enough"); 
-
-    //     if(_stage <= 3) {
-    //          (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
-    //          campaign.amountCollected -= withdrawMoney;
-    //     }
-
-    //  }
-
     function releaseFunds(uint256 _id, uint256 _stage) public payable {
-        // uint256 currentStage = _stage;
+
         Campaign storage campaign = campaigns[_id];
 
-        if (_stage == 0) { // If the campaign cannot start, return the funds donated by the donor to the donor
+
+        if (_stage < 3) {                                                      // release the rest amount of money. call this 4 times at most: 1 before voting and 3 voting stages
             for (uint256 i = 0; i < campaign.donators.length; i++) {
                 address donator = campaign.donators[i];
                 uint256 donation = campaign.donations[donator];
-                (bool sent, ) =payable(donator).call{value: donation}("");
+                uint256 payout = campaign.amountleft * donation / campaign.target;    // donation / campaign.target means the portion of each donators
+                (bool sent, ) = payable(donator).call{value: payout}("");
                 require(sent, "Failed to send Ether.");
             }
-            campaign.amountCollected = 0;
-        } else if (_stage == 1) { // If the campaign can be completed in the end, the original funds and expected interest will be returned to the donor within 30 days after the end of the project
-            require(campaign.amountCollected >= campaign.target, "Target amount not reached.");
-            require(block.timestamp >= campaign.deadline + 30 days, "Funds can only be released one month after the deadline.");
-            uint256 totalPayout;
+        }else if (_stage==3){                                                  //release all the profits. call this only one time
+            uint256 profit = campaign.profit;
+            uint256 total_payout = 0;
             for (uint256 i = 0; i < campaign.donators.length; i++) {
                 address donator = campaign.donators[i];
                 uint256 donation = campaign.donations[donator];
-                uint256 payout = donation + donation * campaign.expectedInterestRate / 100;
+                uint256 payout =  profit * donation / campaign.target;
                 (bool sent, ) =payable(donator).call{value: payout}("");
                 require(sent, "Failed to send Ether.");
-                totalPayout += payout;
+                total_payout += payout;
             }
-            campaign.amountCollected = 0;
-        } else if (_stage == 2) { // If the campaign is interrupted, the remaining funds will be returned to the donor in proportion to the donation
-            uint256 totalDonations;
-            for (uint256 i = 0; i < campaign.donators.length; i++) {
-                address payable donator = payable(campaign.donators[i]);
-                uint256 donation = campaign.donations[donator];
-                totalDonations += donation;
-            }
-            for (uint256 i = 0; i < campaign.donators.length; i++) {
-                address payable donator = payable(campaign.donators[i]);
-                uint256 donation = campaign.donations[donator];
-                uint256 payout = campaign.amountCollected * donation / totalDonations;
-                (bool sent, ) = donator.call{value: payout}("");
-                require(sent, "Failed to send Ether.");
-            }
-            campaign.amountCollected = 0;
-        } else {
-            revert("Invalid stage");
+
+            // check if all the funds are released
+            // check to prevent failing to send money halfway in loop
+            // This require is not necessary, just in case
+            require(profit == total_payout,"Not all funds are released");
         }
+
     }
 
     function donateRestMoney(uint256 id) public payable {
@@ -234,6 +201,18 @@ contract Crowdfunding {
         // owner can add their profit in every stages
         // camp.profit[camp.current_stage] += msg.value;
         camp.profit += msg.value;
+    }
+
+    // add owner to blacklist if not return enough profit
+    address[] blacklist;
+    function punish(address owner) public {
+        require(msg.sender==address(this),"This function can only be called by contract.");
+        blacklist.push(owner);
+    }
+
+    function calculateProfit(uint256 id) public view returns (uint256) {
+        // to calculate how much money the owner need to add to campaign
+        return campaigns[id].target*campaigns[id].expectedInterestRate;
     }
 
 

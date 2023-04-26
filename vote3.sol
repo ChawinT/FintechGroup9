@@ -13,18 +13,22 @@ contract Vote is Crowdfunding {
 // 1-raising money   2-fail(because funds not enough)
 // 3-enough money and voting     4-fail(vote to end)
 // 5-finish and give money back with interest
+// 6-campaign done
 
     function moveNextStage(uint256 project_id) public {
 
         uint256 stage = campaigns[project_id].current_stage;
 
         if((stage ==0)&& (campaigns[project_id].status==1)){
+            campaigns[project_id].amountleft = campaigns[project_id].amountCollected;
+
             if (isFundsEnough(project_id)){                    // fund is enough
                 // start the project
                 campaigns[project_id].status = 3;
                 // withdraw first stage amount of funds
                 withdrawFunds(project_id, stage);       //
-                // start voting
+                // start voting 
+                // record the start time
                 campaigns[project_id].start_timestamp = block.timestamp;
             }else{
                 // project fail at raising money
@@ -51,9 +55,20 @@ contract Vote is Crowdfunding {
         }else if((stage == 3)&&(campaigns[project_id].status==3)){   // last stage, no votings
             require(block.timestamp>=campaigns[project_id].deadline,"stage 3 has not reached the deadline");
             campaigns[project_id].status = 5;
-            // release funds with interest rate
+
+        }else if((stage == 3)&&campaigns[project_id].status==5){     // release funds after project finish and with interest rate
+
+            // require after owner add the profit to campaign
+            uint256 expect = campaigns[project_id].target*campaigns[project_id].expectedInterestRate;
+            if(campaigns[project_id].profit < expect){    // if profit is less than owner promised
+                // add owner to blacklist
+                punish(campaigns[project_id].owner);
+            }
+            // then release the fund 
             releaseFunds(project_id, stage);
+            campaigns[project_id].status = 6;
         }
+
     }
 
 
