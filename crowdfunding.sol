@@ -22,7 +22,7 @@ contract Crowdfunding {
         uint256 status;
         uint256 current_stage;
         uint256 start_timestamp;
-        uint256[] profit; // profit from each stage
+        uint256 profit; // profit in the end
     }
     
 
@@ -61,7 +61,7 @@ contract Crowdfunding {
         campaign.status = 0;
         campaign.current_stage = 0;
         campaign.timer = [20,30,30,30];
-        campaign.profit = [0,0,0,0];
+        campaign.profit = 0;
 
         numberOfCampaigns++;
 
@@ -209,8 +209,7 @@ contract Crowdfunding {
         require(msg.value > 0, "Donation amount must be greater than zero.");
         require(campaigns[id].status == 1,"Project is not at raising money status");
 
-
-        uint256 amount_need = camp.target -camp.amountCollected;
+        uint256 amount_need = camp.target - camp.amountCollected;
         
         if (camp.donations[msg.sender] == 0) {
             camp.donators.push(msg.sender);
@@ -227,11 +226,14 @@ contract Crowdfunding {
         require(msg.sender == camp.owner,"You are not the campaign owner.");
         require(msg.value>0,"Please enter a value over 0");
         require(camp.status>=3,"Please use this function after raising enough money");
+        //target
+
 
         (bool sent, ) = payable(address(this)).call{value: msg.value}("");
 
         // owner can add their profit in every stages
-        camp.profit[camp.current_stage] += msg.value;
+        // camp.profit[camp.current_stage] += msg.value;
+        camp.profit += msg.value;
     }
 
 
