@@ -30,6 +30,7 @@ contract Crowdfunding {
         uint256 stage;
         uint256 count;
         mapping(address => bool) voterAddrs;
+        string comment;
     }
 
     mapping(uint256 => Campaign) public campaigns;
@@ -53,14 +54,14 @@ contract Crowdfunding {
         campaign.owner = msg.sender;
         campaign.title = _title;
         campaign.description = _description;
-        campaign.target = _target;
+        campaign.target = _target * 1 ether;
         campaign.deadline = (_deadline * minute) + block.timestamp;
         campaign.amountCollected = 0;
         //campaign.amountleft = 0;
         campaign.expectedInterestRate = _expectedInterestRate;
-        campaign.status = 0;
+        campaign.status = 1;
         campaign.current_stage = 0;
-        campaign.timer = [20,30,30,30];
+        campaign.timer = [60,30,60,50];
         campaign.profit = 0;
 
         numberOfCampaigns++;
@@ -108,19 +109,19 @@ contract Crowdfunding {
         require(address(this).balance >= campaign.amountleft, "Don't have enough money on this contract");
 
         if(currentStage == 0) {
-            withdrawMoney = projectFund * 15/100;
+            withdrawMoney = projectFund * 30/100;
             require(campaign.amountleft >= withdrawMoney, "The money in this project is not enough");
             (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
             campaign.amountleft -= withdrawMoney;
         } else
         if(currentStage == 1) {
-            withdrawMoney = projectFund * 40/100;
+            withdrawMoney = projectFund * 30/100;
             require(campaign.amountleft >= withdrawMoney, "The money in this project is not enough");
             (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
             campaign.amountleft -= withdrawMoney;
         } else
         if(currentStage == 2) {
-            withdrawMoney = projectFund * 35/100;
+            withdrawMoney = projectFund * 30/100;
             require(campaign.amountleft >= withdrawMoney, "The money in this project is not enough");
             (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
             campaign.amountleft -= withdrawMoney;
@@ -166,7 +167,7 @@ contract Crowdfunding {
             // check if all the funds are released
             // check to prevent failing to send money halfway in loop
             // This require is not necessary, just in case
-            require(profit == total_payout,"Not all funds are released");
+            require(profit == total_payout, "Not all funds are released");
         }
 
     }
@@ -206,13 +207,13 @@ contract Crowdfunding {
     // add owner to blacklist if not return enough profit
     address[] blacklist;
     function punish(address owner) public {
-        require(msg.sender==address(this),"This function can only be called by contract.");
+        // require(msg.sender==address(this),"This function can only be called by contract.");
         blacklist.push(owner);
     }
 
     function calculateProfit(uint256 id) public view returns (uint256) {
         // to calculate how much money the owner need to add to campaign
-        return campaigns[id].target*campaigns[id].expectedInterestRate;
+        return campaigns[id].target*campaigns[id].expectedInterestRate/100 + campaigns[id].target;
     }
 
 
@@ -221,7 +222,7 @@ contract Crowdfunding {
         view
         returns (address[] memory)
     {
-        return (campaigns[_id].donators);
+        return (campaigns[_id].donators); //,campaigns[_id].donation[campaigns[_id].donators]);  // TODO
     }
     
     function getCampaignsDetails() public view returns (
@@ -265,3 +266,4 @@ contract Crowdfunding {
     }
     
 }
+
