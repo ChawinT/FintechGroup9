@@ -88,9 +88,14 @@ contract Vote is Crowdfunding {
         campaigns[project_id].votes[stage].voterAddrs[msg.sender] = true;
     }
 
-    // function setComment(){
+    function setComment(uint256 id, string memory cmt)public {
+        require(msg.sender == campaigns[id].owner,"only owner can set the comment");
+        campaigns[id].votes[campaigns[id].current_stage].comment = cmt;
+    }
 
-    // }
+    function getComment(uint256 id,uint256 stage) public view returns (string memory){
+        return campaigns[id].votes[stage].comment;
+    }
 
 
     function isDonator(uint256 project_id, address user) public view returns (bool) {

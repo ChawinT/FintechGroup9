@@ -42,7 +42,11 @@ contract Crowdfunding {
         string memory _description,
         uint256 _target,
         uint256 _deadline,
-        uint256 _expectedInterestRate
+        uint256 _expectedInterestRate,
+        uint256 _stage0time,
+        uint256 _stage1time,
+        uint256 _stage2time,
+        uint256 _stage3time
     ) public returns (uint256) {
 
         uint256 minute = 1 minutes;
@@ -61,7 +65,8 @@ contract Crowdfunding {
         campaign.expectedInterestRate = _expectedInterestRate;
         campaign.status = 1;
         campaign.current_stage = 0;
-        campaign.timer = [60,30,60,50];
+        // int256[] memory timer = new uint256[](numberOfCampaigns);
+        campaign.timer = [_stage0time,_stage1time,_stage2time,_stage3time];
         campaign.profit = 0;
 
         numberOfCampaigns++;
@@ -232,6 +237,7 @@ contract Crowdfunding {
         uint256[] memory,
         uint256[] memory,
         uint256[] memory,
+        uint256[] memory,
         uint256[] memory
     ) {
         address[] memory owners = new address[](numberOfCampaigns);
@@ -241,6 +247,7 @@ contract Crowdfunding {
         uint256[] memory deadlines = new uint256[](numberOfCampaigns);
         uint256[] memory amountCollecteds = new uint256[](numberOfCampaigns);
         uint256[] memory statuses = new uint256[](numberOfCampaigns);
+        uint256[] memory stages = new uint256[](numberOfCampaigns);
 
         for (uint256 i = 0; i < numberOfCampaigns; i++) {
             Campaign storage item = campaigns[i];
@@ -252,6 +259,7 @@ contract Crowdfunding {
             deadlines[i] = item.deadline;
             amountCollecteds[i] = item.amountCollected;
             statuses[i] = item.status;
+            stages[i] = item.current_stage;
         }
 
         return (
@@ -261,9 +269,23 @@ contract Crowdfunding {
             targets,
             deadlines,
             amountCollecteds,
-            statuses
+            statuses,
+            stages
         );
     }
-    
+
+    function getStatus(uint256 id)public view returns (string memory){
+
+        if(campaigns[id].status == 1){return("Raising Fund");}
+        else if(campaigns[id].status == 2){return("Fail: Fund Not Enough");}
+        else if(campaigns[id].status == 3){return("Enough Fund and Voting");}
+        else if(campaigns[id].status == 4){return("Fail: Vote to End");}
+        else if(campaigns[id].status == 5){return("Campaign Finish, Owner Add Profit");}
+        else if(campaigns[id].status == 6){return("Give Fund Back to Donators");}
+        else{return("Status is not in the range");}
+    }
+//     If (status == 1 ) public returns{
+// string _status = “raising fund”;
+// return _status;
 }
 
