@@ -88,7 +88,7 @@ contract Vote is Crowdfunding {
         campaigns[project_id].votes[stage].voterAddrs[msg.sender] = true;
     }
 
-    function setComment(uint256 id, string memory cmt)public {
+    function writeComment(uint256 id, string memory cmt)public {
         require(msg.sender == campaigns[id].owner,"only owner can set the comment");
         campaigns[id].votes[campaigns[id].current_stage].comment = cmt;
     }
@@ -116,10 +116,10 @@ contract Vote is Crowdfunding {
         return vote_result;
     }
 
-    function writeComment(uint256 id, string memory cmt) public {
-        Campaign storage campaign = campaigns[id];
-        require(msg.sender==campaign.owner,"only owner can write comment in voting process");
-        // add comment in certain stage
-        campaign.votes[campaign.current_stage].comment = cmt;
-    }
+    // function writeComment(uint256 id, string memory cmt) public {
+    //     Campaign storage campaign = campaigns[id];
+    //     require(msg.sender==campaign.owner,"only owner can write comment in voting process");
+    //     // add comment in certain stage
+    //     campaign.votes[campaign.current_stage].comment = cmt;
+    // }
 }

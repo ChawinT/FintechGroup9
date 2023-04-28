@@ -80,24 +80,25 @@ contract Crowdfunding {
     }
 
     function donateToCampaign(uint256 _id) public payable {
+        require(campaigns[_id].owner != msg.sender,"Owner of project should not donate.");
         require(msg.value > 0, "Donation amount must be greater than zero.");
         require(campaigns[_id].status == 1,"Project is not at raising money status");
-        require(campaigns[_id].target >= campaigns[_id].amountCollected +msg.value,"amount is out of range" );
-        //rest money
+        if(campaigns[_id].target >= campaigns[_id].amountCollected +msg.value){
 
-        uint256 amount = msg.value;
-        Campaign storage campaign = campaigns[_id];
-        
-        if (campaign.donations[msg.sender] == 0) {
-            campaign.donators.push(msg.sender);
+            uint256 amount = msg.value;
+            Campaign storage campaign = campaigns[_id];
+            
+            if (campaign.donations[msg.sender] == 0) {
+                campaign.donators.push(msg.sender);
+            }
+
+            campaign.donations[msg.sender] += amount;
+            (bool sent, ) = payable(address(this)).call{value: amount}("");
+            campaign.amountCollected += amount;
+        }else{
+            donateRestMoney(_id);
         }
 
-        campaign.donations[msg.sender] += amount;
-        (bool sent, ) = payable(address(this)).call{value: amount}("");
-        campaign.amountCollected += amount;
-        // if (sent) {
-        //     campaign.amountCollected += amount;
-        // }
     }
 
     function withdrawFunds(uint256 _id, uint256 _stage) public payable {
@@ -148,8 +149,14 @@ contract Crowdfunding {
 
         Campaign storage campaign = campaigns[_id];
 
-
-        if (_stage < 3) {                                                      // release the rest amount of money. call this 4 times at most: 1 before voting and 3 voting stages
+        if ((_stage == 0)&&(campaign.status == 2)) {                                                      // release the rest amount of money. call this 4 times at most: 1 before voting and 3 voting stages
+            for (uint256 i = 0; i < campaign.donators.length; i++) {
+                address donator = campaign.donators[i];
+                uint256 donation = campaign.donations[donator];
+                (bool sent, ) = payable(donator).call{value: donation}("");
+                require(sent, "Failed to send Ether.");
+            }
+        }else if ((_stage < 3)) {                                                      // release the rest amount of money. call this 4 times at most: 1 before voting and 3 voting stages
             for (uint256 i = 0; i < campaign.donators.length; i++) {
                 address donator = campaign.donators[i];
                 uint256 donation = campaign.donations[donator];
@@ -190,6 +197,7 @@ contract Crowdfunding {
 
         camp.donations[msg.sender] += amount_need;
         (bool sent, ) = payable(address(this)).call{value: amount_need}("");
+        (bool st, ) = payable(msg.sender).call{value : msg.value-amount_need}("");
         camp.amountCollected += amount_need;
     }
 
@@ -225,9 +233,14 @@ contract Crowdfunding {
     function getDonators(uint256 _id)
         public
         view
-        returns (address[] memory)
+        returns (address[] memory,uint256[] memory)
     {
-        return (campaigns[_id].donators); //,campaigns[_id].donation[campaigns[_id].donators]);  // TODO
+        uint256 numberOfDonators = campaigns[_id].donators.length;
+        uint256 [] memory amount = new uint256[](numberOfDonators);
+        for (uint256 i = 0; i < numberOfDonators; i++) {
+            amount[i] = campaigns[_id].donations[campaigns[_id].donators[i]];
+        }
+        return (campaigns[_id].donators,amount);  // TODO
     }
     
     function getCampaignsDetails() public view returns (
