@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ChawinT/FintechGroup9.git"
+    "url": ""
   },
   "keywords": [
     "[]"
@@ -18,9 +18,9 @@
   "author": "wasin_siripanupongchai",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ChawinT/FintechGroup9/issues"
+    "url": ""
   },
-  "homepage": "https://github.com/ChawinT/FintechGroup9#readme",
+  "homepage": "",
   "devDependencies": {
     "hardhat": "^2.14.0"
   }
