@@ -30,6 +30,7 @@ contract Crowdfunding {
         uint256 stage;
         uint256 count;
         mapping(address => bool) voterAddrs;
+        string comment;
     }
 
     mapping(uint256 => Campaign) public campaigns;
@@ -41,7 +42,11 @@ contract Crowdfunding {
         string memory _description,
         uint256 _target,
         uint256 _deadline,
-        uint256 _expectedInterestRate
+        uint256 _expectedInterestRate,
+        uint256 _stage0time,
+        uint256 _stage1time,
+        uint256 _stage2time,
+        uint256 _stage3time
     ) public returns (uint256) {
 
         uint256 minute = 1 minutes;
@@ -53,14 +58,15 @@ contract Crowdfunding {
         campaign.owner = msg.sender;
         campaign.title = _title;
         campaign.description = _description;
-        campaign.target = _target;
+        campaign.target = _target * 1 ether;
         campaign.deadline = (_deadline * minute) + block.timestamp;
         campaign.amountCollected = 0;
-        campaign.amountleft = 0;
+        //campaign.amountleft = 0;
         campaign.expectedInterestRate = _expectedInterestRate;
-        campaign.status = 0;
+        campaign.status = 1;
         campaign.current_stage = 0;
-        campaign.timer = [20,30,30,30];
+        // int256[] memory timer = new uint256[](numberOfCampaigns);
+        campaign.timer = [_stage0time,_stage1time,_stage2time,_stage3time];
         campaign.profit = 0;
 
         numberOfCampaigns++;
@@ -74,24 +80,25 @@ contract Crowdfunding {
     }
 
     function donateToCampaign(uint256 _id) public payable {
+        require(campaigns[_id].owner != msg.sender,"Owner of project should not donate.");
         require(msg.value > 0, "Donation amount must be greater than zero.");
         require(campaigns[_id].status == 1,"Project is not at raising money status");
-        require(campaigns[_id].target >= campaigns[_id].amountCollected +msg.value,"amount is out of range" );
-        //rest money
+        if(campaigns[_id].target >= campaigns[_id].amountCollected +msg.value){
 
-        uint256 amount = msg.value;
-        Campaign storage campaign = campaigns[_id];
-        
-        if (campaign.donations[msg.sender] == 0) {
-            campaign.donators.push(msg.sender);
+            uint256 amount = msg.value;
+            Campaign storage campaign = campaigns[_id];
+            
+            if (campaign.donations[msg.sender] == 0) {
+                campaign.donators.push(msg.sender);
+            }
+
+            campaign.donations[msg.sender] += amount;
+            (bool sent, ) = payable(address(this)).call{value: amount}("");
+            campaign.amountCollected += amount;
+        }else{
+            donateRestMoney(_id);
         }
 
-        campaign.donations[msg.sender] += amount;
-        (bool sent, ) = payable(address(this)).call{value: amount}("");
-        campaign.amountCollected += amount;
-        // if (sent) {
-        //     campaign.amountCollected += amount;
-        // }
     }
 
     function withdrawFunds(uint256 _id, uint256 _stage) public payable {
@@ -108,19 +115,19 @@ contract Crowdfunding {
         require(address(this).balance >= campaign.amountleft, "Don't have enough money on this contract");
 
         if(currentStage == 0) {
-            withdrawMoney = projectFund * 15/100;
+            withdrawMoney = projectFund * 30/100;
             require(campaign.amountleft >= withdrawMoney, "The money in this project is not enough");
             (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
             campaign.amountleft -= withdrawMoney;
         } else
         if(currentStage == 1) {
-            withdrawMoney = projectFund * 40/100;
+            withdrawMoney = projectFund * 30/100;
             require(campaign.amountleft >= withdrawMoney, "The money in this project is not enough");
             (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
             campaign.amountleft -= withdrawMoney;
         } else
         if(currentStage == 2) {
-            withdrawMoney = projectFund * 35/100;
+            withdrawMoney = projectFund * 30/100;
             require(campaign.amountleft >= withdrawMoney, "The money in this project is not enough");
             (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
             campaign.amountleft -= withdrawMoney;
@@ -138,70 +145,43 @@ contract Crowdfunding {
 
      }
 
-    // function withdrawFunds(uint256 _id, uint256 _stage) public payable {
-
-    //     // uint256 currentStage = _stage;
-
-    //     Campaign storage campaign = campaigns[_id];
-
-    //     //uint _amountWei = _amount * 1 ether;
-    //     address ownerAdd = campaign.owner;
-    //     uint withdrawMoney = campaign.amountCollected * 15/100;
-
-    //     //require(msg.sender == campaign.owner, "Only the owener of the campaign can withdraw funds");
-    //     require(address(this).balance > withdrawMoney, "Don't have enpugh money on this contract");
-    //     require(campaign.amountCollected >= withdrawMoney, "The money in this project is not enough"); 
-
-    //     if(_stage <= 3) {
-    //          (bool sent, ) = payable(ownerAdd).call{value : withdrawMoney}("");
-    //          campaign.amountCollected -= withdrawMoney;
-    //     }
-
-    //  }
-
     function releaseFunds(uint256 _id, uint256 _stage) public payable {
-        // uint256 currentStage = _stage;
+
         Campaign storage campaign = campaigns[_id];
 
-        if (_stage == 0) { // If the campaign cannot start, return the funds donated by the donor to the donor
+        if ((_stage == 0)&&(campaign.status == 2)) {                                                      // release the rest amount of money. call this 4 times at most: 1 before voting and 3 voting stages
             for (uint256 i = 0; i < campaign.donators.length; i++) {
                 address donator = campaign.donators[i];
                 uint256 donation = campaign.donations[donator];
-                (bool sent, ) =payable(donator).call{value: donation}("");
+                (bool sent, ) = payable(donator).call{value: donation}("");
                 require(sent, "Failed to send Ether.");
             }
-            campaign.amountCollected = 0;
-        } else if (_stage == 1) { // If the campaign can be completed in the end, the original funds and expected interest will be returned to the donor within 30 days after the end of the project
-            require(campaign.amountCollected >= campaign.target, "Target amount not reached.");
-            require(block.timestamp >= campaign.deadline + 30 days, "Funds can only be released one month after the deadline.");
-            uint256 totalPayout;
+        }else if ((_stage < 3)) {                                                      // release the rest amount of money. call this 4 times at most: 1 before voting and 3 voting stages
             for (uint256 i = 0; i < campaign.donators.length; i++) {
                 address donator = campaign.donators[i];
                 uint256 donation = campaign.donations[donator];
-                uint256 payout = donation + donation * campaign.expectedInterestRate / 100;
+                uint256 payout = campaign.amountleft * donation / campaign.target;    // donation / campaign.target means the portion of each donators
+                (bool sent, ) = payable(donator).call{value: payout}("");
+                require(sent, "Failed to send Ether.");
+            }
+        }else if (_stage==3){                                                  //release all the profits. call this only one time
+            uint256 profit = campaign.profit;
+            uint256 total_payout = 0;
+            for (uint256 i = 0; i < campaign.donators.length; i++) {
+                address donator = campaign.donators[i];
+                uint256 donation = campaign.donations[donator];
+                uint256 payout =  profit * donation / campaign.target;
                 (bool sent, ) =payable(donator).call{value: payout}("");
                 require(sent, "Failed to send Ether.");
-                totalPayout += payout;
+                total_payout += payout;
             }
-            campaign.amountCollected = 0;
-        } else if (_stage == 2) { // If the campaign is interrupted, the remaining funds will be returned to the donor in proportion to the donation
-            uint256 totalDonations;
-            for (uint256 i = 0; i < campaign.donators.length; i++) {
-                address payable donator = payable(campaign.donators[i]);
-                uint256 donation = campaign.donations[donator];
-                totalDonations += donation;
-            }
-            for (uint256 i = 0; i < campaign.donators.length; i++) {
-                address payable donator = payable(campaign.donators[i]);
-                uint256 donation = campaign.donations[donator];
-                uint256 payout = campaign.amountCollected * donation / totalDonations;
-                (bool sent, ) = donator.call{value: payout}("");
-                require(sent, "Failed to send Ether.");
-            }
-            campaign.amountCollected = 0;
-        } else {
-            revert("Invalid stage");
+
+            // check if all the funds are released
+            // check to prevent failing to send money halfway in loop
+            // This require is not necessary, just in case
+            require(profit == total_payout, "Not all funds are released");
         }
+
     }
 
     function donateRestMoney(uint256 id) public payable {
@@ -217,6 +197,7 @@ contract Crowdfunding {
 
         camp.donations[msg.sender] += amount_need;
         (bool sent, ) = payable(address(this)).call{value: amount_need}("");
+        (bool st, ) = payable(msg.sender).call{value : msg.value-amount_need}("");
         camp.amountCollected += amount_need;
     }
 
@@ -236,19 +217,37 @@ contract Crowdfunding {
         camp.profit += msg.value;
     }
 
+    // add owner to blacklist if not return enough profit
+    address[] blacklist;
+    function punish(address owner) public {
+        // require(msg.sender==address(this),"This function can only be called by contract.");
+        blacklist.push(owner);
+    }
+
+    function calculateProfit(uint256 id) public view returns (uint256) {
+        // to calculate how much money the owner need to add to campaign
+        return campaigns[id].target*campaigns[id].expectedInterestRate/100 + campaigns[id].target;
+    }
+
 
     function getDonators(uint256 _id)
         public
         view
-        returns (address[] memory)
+        returns (address[] memory,uint256[] memory)
     {
-        return (campaigns[_id].donators);
+        uint256 numberOfDonators = campaigns[_id].donators.length;
+        uint256 [] memory amount = new uint256[](numberOfDonators);
+        for (uint256 i = 0; i < numberOfDonators; i++) {
+            amount[i] = campaigns[_id].donations[campaigns[_id].donators[i]];
+        }
+        return (campaigns[_id].donators,amount);  // TODO
     }
     
     function getCampaignsDetails() public view returns (
         address[] memory,
         string[] memory,
         string[] memory,
+        uint256[] memory,
         uint256[] memory,
         uint256[] memory,
         uint256[] memory,
@@ -261,6 +260,7 @@ contract Crowdfunding {
         uint256[] memory deadlines = new uint256[](numberOfCampaigns);
         uint256[] memory amountCollecteds = new uint256[](numberOfCampaigns);
         uint256[] memory statuses = new uint256[](numberOfCampaigns);
+        uint256[] memory stages = new uint256[](numberOfCampaigns);
 
         for (uint256 i = 0; i < numberOfCampaigns; i++) {
             Campaign storage item = campaigns[i];
@@ -272,6 +272,7 @@ contract Crowdfunding {
             deadlines[i] = item.deadline;
             amountCollecteds[i] = item.amountCollected;
             statuses[i] = item.status;
+            stages[i] = item.current_stage;
         }
 
         return (
@@ -281,8 +282,22 @@ contract Crowdfunding {
             targets,
             deadlines,
             amountCollecteds,
-            statuses
+            statuses,
+            stages
         );
     }
-    
+
+    function getStatus(uint256 id)public view returns (string memory){
+
+        if(campaigns[id].status == 1){return("Raising Fund");}
+        else if(campaigns[id].status == 2){return("Fail: Fund Not Enough");}
+        else if(campaigns[id].status == 3){return("Enough Fund and Voting");}
+        else if(campaigns[id].status == 4){return("Fail: Vote to End");}
+        else if(campaigns[id].status == 5){return("Campaign Finish, Owner Add Profit");}
+        else if(campaigns[id].status == 6){return("Give Fund Back to Donators");}
+        else{return("Status is not in the range");}
+    }
+//     If (status == 1 ) public returns{
+// string _status = “raising fund”;
+// return _status;
 }
