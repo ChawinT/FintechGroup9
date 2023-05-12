@@ -21,8 +21,9 @@ contract Crowdfunding {
         mapping(uint => Voting) votes;
         uint256 status;
         uint256 current_stage;
-        uint256 start_timestamp;
+        // uint256 start_timestamp;
         uint256 profit; // profit in the end
+        string img;
     }
     
 
@@ -46,10 +47,11 @@ contract Crowdfunding {
         uint256 _stage0time,
         uint256 _stage1time,
         uint256 _stage2time,
-        uint256 _stage3time
+        uint256 _stage3time,
+        string memory _img
     ) public returns (uint256) {
 
-        uint256 minute = 1 minutes;
+        //uint256 minute = 1 minutes;
 
         Campaign storage campaign = campaigns[numberOfCampaigns];
 
@@ -59,7 +61,7 @@ contract Crowdfunding {
         campaign.title = _title;
         campaign.description = _description;
         campaign.target = _target * 1 ether;
-        campaign.deadline = (_deadline * minute) + block.timestamp;
+        campaign.deadline = _deadline;
         campaign.amountCollected = 0;
         //campaign.amountleft = 0;
         campaign.expectedInterestRate = _expectedInterestRate;
@@ -68,6 +70,7 @@ contract Crowdfunding {
         // int256[] memory timer = new uint256[](numberOfCampaigns);
         campaign.timer = [_stage0time,_stage1time,_stage2time,_stage3time];
         campaign.profit = 0;
+        campaign.img = _img;
 
         numberOfCampaigns++;
 

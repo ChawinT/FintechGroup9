@@ -30,7 +30,7 @@ contract Vote is Crowdfunding {
                 withdrawFunds(project_id, stage);       //
                 // start voting 
                 // record the start time
-                campaigns[project_id].start_timestamp = block.timestamp;
+                // campaigns[project_id].start_timestamp = block.timestamp;
             }else{
                 // project fail at raising money
                 campaigns[project_id].status = 2;
@@ -39,11 +39,12 @@ contract Vote is Crowdfunding {
             }
             
         }else if((stage < 3)&& (campaigns[project_id].status==3)){  // stage 0,1,2 voting
-            uint256 time = campaigns[project_id].start_timestamp;
-            for (uint256 i = 0;i<=stage;i++){
-                time += campaigns[project_id].timer[i]* 1 seconds;     //TODO: change minutes to days
-            }
-            require(block.timestamp > time,"voting has not reached the deadline");
+            // uint256 time = campaigns[project_id].start_timestamp;
+            // for (uint256 i = 0;i<=stage;i++){
+            //     time += campaigns[project_id].timer[i]* 1 seconds;     //TODO: change minutes to days
+            // }
+            uint256 i = campaigns[project_id].current_stage;
+            require(block.timestamp > campaigns[project_id].timer[i],"voting has not reached the deadline");
             if(getVotingResult(project_id, stage)){
                 // project contine and withdraw the part of funds to project owner
                 campaigns[project_id].current_stage += 1;
