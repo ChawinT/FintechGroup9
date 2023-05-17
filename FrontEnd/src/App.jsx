@@ -8,7 +8,7 @@ import { CampaignDetails, CreateCampaign, Home, Profile,Vote, CampaignDetailsVot
 
 const App = () => {
   return (
-    <div className="relative sm:-8 p-4 bg-[#000000] min-h-screen flex flex-row">
+    <div className="relative sm:-8 p-4 bg-[#3C393A] min-h-screen flex flex-row">
       <div className="flex-1 max-sm:w-full max-w-[1280px] mx-auto sm:pr-5">
         <Navbar />
         <Routes>

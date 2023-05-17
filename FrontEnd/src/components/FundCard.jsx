@@ -3,8 +3,12 @@ import React from 'react';
 import { tagType, thirdweb } from '../assets';
 import { daysLeft } from '../utils';
 
-const FundCard = ({ owner, title, description, target, deadline, amountCollected, image, handleClick }) => {
+const FundCard = ({ owner, title, description, target, deadline, amountCollected, image, handleClick,stage3time }) => {
   const remainingDays = daysLeft(deadline*1000);
+  const unixTimestamp = stage3time;
+  const milliseconds = unixTimestamp*1000; 
+  const dateObject = new Date(milliseconds);
+  console.log(dateObject)
   
   return (
     <div className="sm:w-[288px] w-full rounded-[15px] bg-[#000000] cursor-pointer" onClick={handleClick}>
@@ -25,7 +29,11 @@ const FundCard = ({ owner, title, description, target, deadline, amountCollected
           </div>
           <div className="flex flex-col">
             <h4 className="font-epilogue font-semibold text-[14px] text-[#b2b3bd] leading-[22px]">{remainingDays}</h4>
-            <p className="mt-[3px] font-epilogue font-normal text-[12px] leading-[18px] text-[#808191] sm:max-w-[120px] truncate">Days Left</p>
+            <p className="mt-[3px] font-epilogue font-normal text-[12px] leading-[18px] text-[#808191] sm:max-w-[120px] truncate">Days Left to raise fund</p>
+          </div>
+          <div className="flex flex-col">
+            <h4 className="font-epilogue font-semibold text-[14px] text-[#b2b3bd] leading-[22px]">{dateObject.toDateString()}</h4>
+            <p className="mt-[3px] font-epilogue font-normal text-[12px] leading-[18px] text-[#808191] sm:max-w-[120px] truncate">Date expected money return: </p>
           </div>
         </div>
 

@@ -17,6 +17,10 @@ const CampaignDetails = () => {
   const [donators, setDonators] = useState([]);
 
   const remainingDays = daysLeft(state.deadline*1000);
+  const unixTimestamp = state.stage3time;
+  const milliseconds = unixTimestamp*1000; 
+  const dateObject = new Date(milliseconds);
+  console.log(dateObject)
 
   const fetchDonators = async () => {
     const data = await getDonations(state.pId);
@@ -45,10 +49,11 @@ const CampaignDetails = () => {
       <div className="w-full flex md:flex-row flex-col mt-10 gap-[30px]">
         
 
-        <div className="flex md:w-[150px]  flex-wrap justify-between gap-[30px]">
+        <div className="flex md:w-[150px]  flex-wrap justify-between gap-[10px]">
           <CountBox title="Days Left" value={remainingDays} />
           <CountBox title={`Raised of ${state.target}`} value={state.amountCollected} />
           <CountBox title="Total Backers" value={donators.length} />
+          <CountBox title="Money will return" value={dateObject.toLocaleDateString("en-US")} />
         </div> 
         <div className="flex-1 flex-col">
           <img src={state.image} alt="campaign" className="w-full h-[410px] object-cover rounded-xl"/>
